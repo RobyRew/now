@@ -82,6 +82,16 @@ uv pip compile requirements.in --universal --generate-hashes --python-version 3.
 - Log lines carry a slot, an event, an error type and an HTTP status. SpotAPI's own loggers are off, and no log
   line prints a traceback: exception messages and URLs can carry a cookie or a token.
 
+## Credits
+
+- **[SpotAPI](https://github.com/Aran404/SpotAPI)** by [Aran404](https://github.com/Aran404) does the hard part: the
+  Spotify web-player sign-in from an `sp_dc` cookie, the Spotify Connect dealer connection and the player state this
+  service reads. `now/observer.py` builds on its `PlayerStatus` class. SpotAPI is licensed under the GNU GPL v3.0;
+  the published image ships it unchanged, with its license in `spotapi-2.1.3.dist-info/licenses/LICENSE`.
+- **[wreq](https://github.com/0x676e67/wreq-python)** by 0x676e67 is the HTTP client underneath SpotAPI, with a
+  Chrome TLS fingerprint (Apache-2.0).
+
 ## License
 
-Apache-2.0
+Apache-2.0 for this repository's own code. SpotAPI, which it imports, is GPL-3.0; Apache-2.0 code can be combined
+with GPL-3.0 code, and the combined image is distributed under the terms of both.
