@@ -38,7 +38,7 @@ COPY now/ ./now/
 COPY --from=admin /admin/dist ./admin/dist
 
 # The sealed sessions and the last plays live here. Mount the named volume
-# now-data on this path in Dokploy, or every redeploy starts with no accounts.
+# now-spotify-data on this path in Dokploy, or every redeploy starts with no accounts.
 RUN mkdir -p /data && chown app:app /data
 
 USER app

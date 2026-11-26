@@ -55,7 +55,7 @@ jobs:
       packages: write
     uses: RobyRew/platform/.github/workflows/build-image.yml@main
     with:
-      # Set to true once the Dokploy app exists and the DOKPLOY_DEPLOY_WEBHOOK secret is set.
-      request_deploy: false
+      # POSTs the Dokploy app's deploy webhook (repository secret DOKPLOY_DEPLOY_WEBHOOK) after the push.
+      request_deploy: true
     secrets:
       DOKPLOY_DEPLOY_WEBHOOK: ${{ secrets.DOKPLOY_DEPLOY_WEBHOOK }}

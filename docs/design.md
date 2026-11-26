@@ -42,7 +42,7 @@ Measured on this Mac (Python 3.13, arm64), with no Spotify connection open:
 
 ## 3. Where the sessions live
 
-- **Storage.** A named volume `now-data`, mounted at `/data`, holds a SQLite database (Python's stdlib). It has
+- **Storage.** A named volume `now-spotify-data`, mounted at `/data`, holds a SQLite database (Python's stdlib). It has
   one row per slot, 1–9, with:
   - the label, the username and the encrypted sp_dc;
   - the status;
@@ -62,7 +62,7 @@ Measured on this Mac (Python 3.13, arm64), with no Spotify connection open:
   - An asyncio exception handler drops exception messages.
   - uvicorn's access log is off.
   - The cookie only travels in a POST body, so it never reaches Traefik's URL logs.
-- **Infra** (standing rule): add `now-data` to `backup_docker_volumes` and `report_expected_app_mounts`, and add
+- **Infra** (standing rule): add `now-spotify-data` to `backup_docker_volumes` and `report_expected_app_mounts`, and add
   `/healthz` to the site probe.
 
 ## 4. The observers
