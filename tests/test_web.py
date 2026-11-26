@@ -148,6 +148,23 @@ class WebTest(unittest.TestCase):
             forged = client.get(f"/admin/callback?code={code}&state=forged")
             self.assertEqual(forged.headers["location"], "/admin/?signin=failed")
 
+    def test_import_needs_its_token(self) -> None:
+        with self.client() as client:  # IMPORT_TOKEN unset: the route does not exist
+            self.assertEqual(client.put("/api/import/1", json={"sp_dc": GOOD}).status_code, 404)
+        token = "t" * 40
+        with self.client(replace(self.settings, import_token=token)) as client:
+            self.assertEqual(client.put("/api/import/1", json={"sp_dc": GOOD}).status_code, 401)
+            wrong = client.put("/api/import/1", json={"sp_dc": GOOD}, headers={"authorization": "Bearer " + "x" * 40})
+            self.assertEqual(wrong.status_code, 401)
+            done = self.remember(client.put("/api/import/2", json={"sp_dc": GOOD, "label": "Cosmin Calin"},
+                                            headers={"authorization": f"Bearer {token}"}))
+            self.assertEqual(done.status_code, 200)
+            self.assertEqual((done.json()["slot"], done.json()["username"], done.json()["label"]), (2, "cosmin", "Cosmin Calin"))
+            refused = self.remember(client.put("/api/import/3", json={"sp_dc": EXPIRED}, headers={"authorization": f"Bearer {token}"}))
+            self.assertEqual(refused.json()["error"], "session_refused")
+            self.assertEqual(client.put("/api/import/10", json={"sp_dc": GOOD}, headers={"authorization": f"Bearer {token}"}).status_code, 404)
+        self.assertFalse(any(GOOD in text or EXPIRED in text for text in self.responses))
+
     def test_admin_off_without_a_logto_app(self) -> None:
         with self.client(replace(self.settings, logto_app_id="")) as client:
             self.assertEqual(client.get("/admin/login").status_code, 503)

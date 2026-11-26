@@ -15,6 +15,7 @@ Why it is built this way (stack, RAM, where the sessions live, what the API expo
 |---|---|---|
 | `GET /api/now` | anyone | `{"now": {...} \| null, "live": n, "at": "..."}`: the record player's fields (below), `live` = observers connected now |
 | `GET /healthz` | the host's site probe | `ok` |
+| `PUT /api/import/{1-9}` | `Authorization: Bearer <IMPORT_TOKEN>` | only while `IMPORT_TOKEN` is set (else 404): `{"sp_dc": "...", "label": "..."}`, checked and sealed like the admin page; for a one-off copy from another system |
 | `/admin/` | RobyRew ID users in `ADMIN_SUBS` | the accounts page (static Astro build) |
 | `/admin/login`, `/admin/callback`, `POST /admin/logout` | | Logto sign-in (authorization code + PKCE) |
 | `GET /admin/api/accounts`, `PUT/PATCH/DELETE /admin/api/accounts/{1-9}` | admin session | list, add/replace a session (`{"sp_dc": "..."}`), rename (`{"label": "..."}`), remove |
@@ -36,6 +37,7 @@ fields and rules as `.github/profile/data.py` in RobyRew/RobyRew. Nothing else l
 | `ADMIN_SUBS` | for /admin | Comma-separated Logto user ids allowed into /admin. |
 | `DATA_DIR` | no | Default `/data` (the named volume). |
 | `PORT` | no | Default `8080`. |
+| `IMPORT_TOKEN` | no | 32+ characters. While set, `PUT /api/import/{slot}` accepts sessions with this bearer token. Set it for an import, unset it after. |
 
 ## Deploying
 

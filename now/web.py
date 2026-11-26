@@ -7,6 +7,7 @@ stored, and no response ever carries it back.
 
 from __future__ import annotations
 
+import hmac
 import json
 import logging
 import time
@@ -200,6 +201,40 @@ def create_app(settings: Settings, hub: Hub, auth: Auth, *, on_close: Callable[[
             return problem(502, "spotify_unreachable", detail=str(error.args[0]) if error.args else "")
         return JSONResponse(added, headers=NO_STORE)
 
+    # ── import: copying sessions from another system, only while IMPORT_TOKEN is set ──
+
+    async def import_account(request: Request) -> Response:
+        """PUT /api/import/{slot} with `Authorization: Bearer <IMPORT_TOKEN>` and {"sp_dc": ..., "label": ...}.
+        The same check and sealing as the admin page; the session never comes back in the answer."""
+        if not settings.import_token:
+            return problem(404, "not_found")
+        given = request.headers.get("authorization", "").encode()
+        if not hmac.compare_digest(given, f"Bearer {settings.import_token}".encode()):
+            log.info("import refused: wrong or missing token")
+            return problem(401, "unauthorized")
+        slot = request.path_params["slot"]
+        if not 1 <= slot <= 9:
+            return problem(404, "no_such_slot")
+        body = await json_body(request)
+        if body is None:
+            return problem(400, "json_body_required")
+        pasted, label = body.get("sp_dc"), body.get("label")
+        if not isinstance(pasted, str):
+            return problem(400, "sp_dc_required")
+        try:
+            added = await hub.add(slot, pasted)
+        except ValueError:
+            return problem(400, "invalid_sp_dc")
+        except SessionRefused:
+            return problem(422, "session_refused")
+        except SessionCheckFailed as error:
+            return problem(502, "spotify_unreachable", detail=str(error.args[0]) if error.args else "")
+        if isinstance(label, str) and label.strip():
+            hub.rename(slot, label)
+            added = next(a for a in hub.accounts() if a["slot"] == slot)
+        log.info("slot %d: imported", slot)
+        return JSONResponse(added, headers=NO_STORE)
+
     async def failed(_: Request, error: Exception) -> Response:
         log.warning("request failed (%s)", describe(error))
         return problem(500, "internal")
@@ -221,6 +256,7 @@ def create_app(settings: Settings, hub: Hub, auth: Auth, *, on_close: Callable[[
         Route("/", home),
         Route("/healthz", healthz),
         Route("/api/now", api_now),
+        Route("/api/import/{slot:int}", import_account, methods=["PUT"]),
         Route("/admin", lambda _: RedirectResponse("/admin/", status_code=308)),
         Route("/admin/login", login),
         Route("/admin/callback", callback),

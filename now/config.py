@@ -52,6 +52,9 @@ class Settings:
     """The built admin page."""
     host: str = "0.0.0.0"
     port: int = 8080
+    import_token: str = ""
+    """IMPORT_TOKEN: while set, PUT /api/import/{slot} takes sessions with this bearer token (a one-off copy from
+    another system); empty = that route answers 404."""
 
     @property
     def admin_enabled(self) -> bool:
@@ -79,6 +82,9 @@ class Settings:
             port = int(os.environ.get("PORT", "8080"))
         except ValueError:
             raise ConfigError("PORT must be a number") from None
+        import_token = os.environ.get("IMPORT_TOKEN", "").strip()
+        if import_token and len(import_token) < 32:
+            raise ConfigError("IMPORT_TOKEN must be at least 32 characters (openssl rand -base64 32), or unset")
         default_static = Path(__file__).resolve().parent.parent / "admin" / "dist"
         return cls(
             public_url=public_url,
@@ -93,4 +99,5 @@ class Settings:
             static_dir=Path(os.environ.get("STATIC_DIR", str(default_static))),
             host=os.environ.get("HOST", "0.0.0.0"),
             port=port,
+            import_token=import_token,
         )

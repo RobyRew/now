@@ -2,21 +2,36 @@
 
 from __future__ import annotations
 
+import base64
 import os
 import stat
 import tempfile
 import time
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from spotapi.models.playback import Device, PlayerState
 
 from now import record as records
+from now.config import ConfigError, Settings
 from now.crypto import Sealer, SealError
 from now.store import Store
 from tests.fakes import GOOD, cluster
 
 KEY, OTHER = os.urandom(32), os.urandom(32)
+
+
+class ConfigTest(unittest.TestCase):
+    def test_import_token_is_off_or_long(self) -> None:
+        base = {"SESSION_SECRET": "s" * 48, "NOW_KEY": base64.b64encode(os.urandom(32)).decode()}
+        with mock.patch.dict(os.environ, base | {"IMPORT_TOKEN": "short"}, clear=True):
+            with self.assertRaises(ConfigError):
+                Settings.from_env()
+        with mock.patch.dict(os.environ, base, clear=True):
+            self.assertEqual(Settings.from_env().import_token, "")
+        with mock.patch.dict(os.environ, base | {"IMPORT_TOKEN": "k" * 40}, clear=True):
+            self.assertEqual(Settings.from_env().import_token, "k" * 40)
 
 
 class SealerTest(unittest.TestCase):
