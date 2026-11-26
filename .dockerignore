@@ -1,0 +1,14 @@
+.git
+.github
+.venv.nosync
+**/__pycache__
+**/*.pyc
+.DS_Store
+admin/node_modules
+admin/dist
+admin/.astro
+tests
+scripts
+docs
+data
+*.md

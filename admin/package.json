@@ -1,0 +1,25 @@
+{
+  "name": "now-admin",
+  "private": true,
+  "version": "0.1.0",
+  "description": "The admin page of now.spotify.robyrew.com, built to static files the Python service serves at /admin/",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev --port 4352",
+    "build": "npm run check && astro build",
+    "check": "astro sync && tsc --noEmit",
+    "astro": "astro"
+  },
+  "devDependencies": {
+    "@robyrew/web-config": "github:RobyRew/web-config#v0.4.0",
+    "@tailwindcss/vite": "^4.3.5",
+    "@types/node": "^26.6.6",
+    "astro": "^7.4.12",
+    "tailwindcss": "^4.3.5",
+    "typescript": "^7.0.2"
+  },
+  "engines": {
+    "node": ">=26"
+  }
+}

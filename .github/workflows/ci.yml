@@ -1,0 +1,60 @@
+name: Test, build and publish
+
+# Tests (Python, then the admin page's type check and build); on main, the image is then built by the fleet's shared
+# workflow in RobyRew/platform and pushed to ghcr.io/robyrew/now.
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**.md', 'docs/**']
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.15'
+
+      - name: Install the pinned dependencies
+        run: pip install --require-hashes --only-binary=:all: --no-deps -r requirements.txt
+
+      - name: Tests (fake Spotify, fake Logto)
+        run: python -m unittest discover -s tests -t . -v
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26'
+          cache: npm
+          cache-dependency-path: admin/package-lock.json
+
+      - name: Admin page (type check and build)
+        working-directory: admin
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm run build
+
+  build:
+    needs: test
+    if: github.event_name != 'pull_request'
+    # A called workflow can only reduce the caller's permissions, so packages: write is granted here.
+    permissions:
+      contents: read
+      packages: write
+    uses: RobyRew/platform/.github/workflows/build-image.yml@main
+    with:
+      # Set to true once the Dokploy app exists and the DOKPLOY_DEPLOY_WEBHOOK secret is set.
+      request_deploy: false
+    secrets:
+      DOKPLOY_DEPLOY_WEBHOOK: ${{ secrets.DOKPLOY_DEPLOY_WEBHOOK }}
