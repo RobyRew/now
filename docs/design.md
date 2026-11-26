@@ -32,6 +32,8 @@ Measured on this Mac (Python 3.13, arm64), with no Spotify connection open:
 | + Starlette, uvicorn, Authlib, httpx, cryptography | 48 MB |
 | + 9 SpotAPI clients (`AsyncClient.new`, offline) | 52 MB |
 
+- **Measured after deploy (2026-11-26):** 3 accounts use about 150 MiB, roughly 30 MB per account over the
+  45–70 MiB baseline. The limit was raised to 320 MiB. The paragraph below is the estimate made before.
 - **Live connections are not measured yet.** Each one adds a dealer WebSocket, a TLS session and a player
   snapshot with its queue. The estimate is 2–5 MB each, so **about 70–100 MB with 9 accounts**.
 - **vps01 today** (`free -m`): 1,935 MB total, 563 MB available, 1,437 MB of swap in use.

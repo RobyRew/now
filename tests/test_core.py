@@ -117,6 +117,15 @@ class RecordTest(unittest.TestCase):
         assert made.ends_at is not None
         self.assertAlmostEqual(made.ends_at - time.time(), 210, delta=5)
 
+    def test_a_left_over_state_is_dated_by_the_player(self) -> None:
+        raw = cluster(playing=False, paused=False, device=None, stamp_ms=1_795_700_000_000)
+        raw["timestamp"] = str(1_795_703_000_000)  # the cluster assembled 50 minutes later, at connect time
+        state, devices = state_of(raw)
+        made = records.build(state, devices, {}, slot=1, label="", username="u")
+        assert made is not None
+        self.assertEqual(made.at, 1_795_700_000.0)
+        self.assertEqual(made.fields["when"], "2026-11-26T13:33+00:00")
+
     def test_label_paused_and_no_device(self) -> None:
         state, devices = state_of(cluster(playing=False, paused=True))
         made = records.build(state, devices, {}, slot=1, label="Cosmin", username="cosmin")

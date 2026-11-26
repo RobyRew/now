@@ -19,13 +19,15 @@ RUN npm run build
 FROM python:3.15-slim-trixie AS runtime
 WORKDIR /app
 
+# XDG_CACHE_HOME: SpotAPI keeps its persisted-query hash cache there, and the app user has no home directory.
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     DATA_DIR=/data \
     STATIC_DIR=/app/admin/dist \
-    PORT=8080
+    PORT=8080 \
+    XDG_CACHE_HOME=/data/cache
 
 RUN groupadd --system --gid 10001 app && useradd --system --uid 10001 --gid app --no-create-home --shell /usr/sbin/nologin app
 

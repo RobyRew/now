@@ -46,13 +46,18 @@ fields and rules as `.github/profile/data.py` in RobyRew/RobyRew. Nothing else l
 2. **DNS**: A `now.spotify` → 94.143.138.233 and AAAA → 2001:ba0:20d:3c00::1 in the robyrew.com zone, before the
    Dokploy domain is created (Traefik asks Let's Encrypt at once).
 3. **Dokploy** (Tools environment): application `now-spotify` from the image `ghcr.io/robyrew/now:latest`, port
-   8080, `memoryLimit` `"167772160"` (160 MiB), named volume `now-spotify-data` mounted at `/data`, the variables
+   8080, `memoryLimit` `"335544320"` (320 MiB, see below), named volume `now-spotify-data` mounted at `/data`, the variables
    above, domain `now.spotify.robyrew.com` with Let's Encrypt. The repository secret `DOKPLOY_DEPLOY_WEBHOOK` holds
    the app's deploy webhook; CI calls it after each image push to main (`request_deploy: true`).
 4. **Infrastructure repo**: `now-spotify-data` into `backup_docker_volumes` and `report_expected_app_mounts`, and the host
    into the site probe (`/healthz`).
 
 The image has no Docker healthcheck on purpose: exec probes leaked pids and kernel memory on vps01 (2026-09).
+
+**Memory, measured on vps01 (2026-11-26):** about 45–70 MiB with no account, about 150 MiB with 3. In an isolated
+process one account's sign-in added 48 MB (anonymous RSS) and its Connect observer 12 MB more: SpotAPI keeps the
+web-player bundle per session (4.5 MB as a Python string) and further response text, and wreq holds native
+memory per client. The 320 MiB limit leaves room for about 8 accounts.
 
 ## Local run and tests
 

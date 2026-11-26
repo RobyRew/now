@@ -123,7 +123,10 @@ def build(state: Any, devices: Any, extras: dict[str, str], *, slot: int, label:
     if not title:
         return None
     now = time.time() if now is None else now
-    at = stamp_seconds(getattr(state, "timestamp", 0))
+    # The player's own timestamp (when it last reported its position) dates the play. The cluster's timestamp is
+    # when the account's Connect state was assembled: for a state left over from an earlier session it is the
+    # moment this observer connected, which made an old play look like the latest one.
+    at = stamp_seconds(getattr(state, "position_timestamp", None) or getattr(state, "timestamp", 0))
     # Without an active device nothing is actually playing, whatever the last state said.
     playing = bool(state.is_playing and not state.is_paused and state.active_device_id)
     ends_at = None
